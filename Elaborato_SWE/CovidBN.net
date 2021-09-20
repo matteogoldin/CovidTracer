@@ -1,0 +1,80 @@
+net
+{
+     node_size = (50 50);
+     name = "Chest-clinic";
+     tree = "(Positive X-ray?,Has bronchitis,Dyspnoea?,Visit to Asia?,Smoker?,Has lung cancer,Has tuberculosis,Tuberculosis or cancer,C1,SARS COV 2 test result,Relevance of symptoms manifested,SARS COV 2 ,Relevance of contacts with infected subjects)";
+     UnBBayes_Color_Probabilistic_Description = "-256";
+     UnBBayes_Color_Probabilistic_Explanation = "-16711936";
+}
+
+node Result
+{
+     label = "SARS COV 2 test result";
+     position = (606 169);
+     states = ("Positive" "Negative");
+}
+
+node Symptoms
+{
+     label = "Relevance of symptoms manifested";
+     position = (8 160);
+     states = ("Low Risk" "Medium Risk" "High Risk" "None");
+}
+
+node Covid19
+{
+     label = "SARS COV 2 ";
+     position = (298 445);
+     states = ("yes" "no");
+}
+
+node Contacts
+{
+     label = "Relevance of contacts with infected subjects";
+     position = (299 166);
+     states = ("Low Risk" "Medium Risk" "High Risk");
+}
+
+potential (Result)
+{
+ data = ( 0.0084 0.9916 );
+}
+
+potential (Symptoms)
+{
+ data = ( 0.15 0.1 0.05 0.7 );
+}
+
+potential (Covid19 | Contacts Symptoms Result)
+{
+ data = (((( 0.914 0.086 )
+( 0.064 0.936 ))
+(( 0.95 0.05 )
+( 0.1 0.9 ))
+(( 0.97 0.03 )
+( 0.2 0.8 ))
+(( 0.9 0.1 )
+( 0.05 0.95 )))
+((( 0.95 0.05 )
+( 0.15 0.85 ))
+(( 0.96 0.04 )
+( 0.17 0.83 ))
+(( 0.98 0.02 )
+( 0.25 0.75 ))
+(( 0.92 0.08 )
+( 0.1 0.9 )))
+((( 0.96 0.04 )
+( 0.2 0.8 ))
+(( 0.97 0.03 )
+( 0.25 0.75 ))
+(( 0.995 0.005 )
+( 0.3 0.7 ))
+(( 0.95 0.05 )
+( 0.19 0.81 ))));
+}
+
+potential (Contacts)
+{
+ data = ( 0.7 0.2 0.1 );
+}
+
