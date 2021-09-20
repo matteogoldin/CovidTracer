@@ -53,8 +53,8 @@ class Tracer_PageControllerTest {
 			TimePoint refTime2=new TimePoint(LocalDate.now().minusDays(15));
 			tpc.addSymptom(sym.fever, sub, refTime2, evd);
 			tpc.deleteNotRel(sub);
-			assertEquals(sub.getActiveObs().size(),1);
-			assertTrue(sub.getActiveObs().get(0).isSymptom());
+			assertEquals(sub.getObsList().size(),1);
+			assertTrue(sub.getObsList().get(0).isSymptom());
 		}
 		
 		@Test
@@ -66,8 +66,8 @@ class Tracer_PageControllerTest {
 			TimePoint endTime2=new TimePoint(LocalDate.now());
 			tpc.addSymptom(sym.fever, sub, refTime2, evd,endTime2);
 			tpc.deleteNotRel(sub);
-			assertEquals(1,sub.getActiveObs().size());
-			assertEquals(sub.getActiveObs().get(0).getRefTime(),refTime2);
+			assertEquals(1,sub.getObsList().size());
+			assertEquals(sub.getObsList().get(0).getRefTime(),refTime2);
 		}
 		
 		@Test
@@ -77,12 +77,12 @@ class Tracer_PageControllerTest {
 			tpc.addResult(res.negative, sub, refTime, evd);
 			boolean reliable=tpc.deleteNotRel(sub);
 			assertFalse(reliable);
-			assertEquals(0,sub.getActiveObs().size());
+			assertEquals(0,sub.getObsList().size());
 			tpc.addResult(res.positive, sub, refTime, evd);
 			tpc.addResult(res.positive, sub, refTime, evd);
 			reliable=tpc.deleteNotRel(sub);
 			assertTrue(reliable);
-			assertEquals(1,sub.getActiveObs().size());
+			assertEquals(1,sub.getObsList().size());
 		}
 		
 		@Test
@@ -92,8 +92,8 @@ class Tracer_PageControllerTest {
 			tpc.addResult(res.positive, sub, refTime1, evd);
 			tpc.addResult(res.negative, sub, refTime2, evd);
 			tpc.deleteNotRel(sub);
-			assertEquals(1,sub.getActiveObs().size());
-			assertEquals(refTime1,sub.getActiveObs().get(0).getRefTime());
+			assertEquals(1,sub.getObsList().size());
+			assertEquals(refTime1,sub.getObsList().get(0).getRefTime());
 		}
 		
 		@Test
@@ -103,7 +103,7 @@ class Tracer_PageControllerTest {
 			tpc.addResult(res.negative, sub, refTime2, evd);
 			tpc.addSymptom(sym.noSymptom, sub, refTime1, evd);
 			tpc.deleteNotRel(sub);
-			assertEquals(2,sub.getActiveObs().size());
+			assertEquals(2,sub.getObsList().size());
 		}
 		
 		@Test
@@ -113,8 +113,8 @@ class Tracer_PageControllerTest {
 			tpc.addResult(res.negative, sub, refTime2, evd);
 			tpc.addSymptom(sym.abdominalPain, sub, refTime1, evd);
 			tpc.deleteNotRel(sub);
-			assertEquals(1,sub.getActiveObs().size());
-			assertTrue(sub.getActiveObs().get(0).isSymptom());
+			assertEquals(1,sub.getObsList().size());
+			assertTrue(sub.getObsList().get(0).isSymptom());
 		}
 		
 		@Test
@@ -124,8 +124,8 @@ class Tracer_PageControllerTest {
 			tpc.addResult(res.negative, sub, refTime1, evd);
 			tpc.addContact(secSub,risk.high,sub,refTime2,evd);
 			tpc.deleteNotRel(sub);
-			assertEquals(1,sub.getActiveObs().size());
-			assertTrue(sub.getActiveObs().get(0).isContact());
+			assertEquals(1,sub.getObsList().size());
+			assertTrue(sub.getObsList().get(0).isContact());
 		}
 		
 		@Test
@@ -135,7 +135,7 @@ class Tracer_PageControllerTest {
 			tpc.addResult(res.negative, sub, refTime1, evd);
 			tpc.addContact(secSub,risk.high,sub,refTime2,evd);
 			tpc.deleteNotRel(sub);
-			assertEquals(2,sub.getActiveObs().size());
+			assertEquals(2,sub.getObsList().size());
 		}
 		
 	}

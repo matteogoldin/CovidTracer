@@ -26,9 +26,9 @@ public class SubjectTest {
 		Observation obs1=createContact(sub);
 		Observation obs2=createSymptom(sub);
 		Observation obs3=createResult(sub);
-		sub.addActiveObs(obs1);
-		sub.addActiveObs(obs2);
-		sub.addActiveObs(obs3);
+		sub.addObs(obs1);
+		sub.addObs(obs2);
+		sub.addObs(obs3);
 	}
 	
 	
@@ -41,7 +41,7 @@ public class SubjectTest {
 	}
 	@Test
 	public void getNoSymptoms() {
-		sub.getActiveObs().remove(1);
+		sub.getObsList().remove(1);
 		ArrayList<Observation> symList=sub.getSymptoms();
 		assertEquals("Same length",0,symList.size());
 	}	
@@ -57,7 +57,7 @@ public class SubjectTest {
 	
 	@Test
 	public void getNoResultsTest() {
-		sub.getActiveObs().remove(2);
+		sub.getObsList().remove(2);
 		ArrayList<Observation> resList=sub.getResults();
 		assertEquals("Same length",0,resList.size());
 	}
@@ -71,7 +71,7 @@ public class SubjectTest {
 	
 	@Test
 	public void getNoContactTest() {
-		sub.getActiveObs().remove(0);
+		sub.getObsList().remove(0);
 		ArrayList<Observation> contactList=sub.getContacts();
 		assertEquals("Same length",0,contactList.size());
 	}

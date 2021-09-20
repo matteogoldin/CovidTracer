@@ -40,10 +40,10 @@ class Notifier_PageControllerTest {
 		npc.addSymptom(sym.delirium, sub, refTime1, null);
 		npc.addSymptom(sym.diarrhea, sub, refTime2, null);
 		npc.addSymptom(sym.noSymptom, sub, refTime3, null);
-		assertEquals(2,sub.getActiveObs().size());
-		Symptom s1=(Symptom) sub.getActiveObs().get(0);
+		assertEquals(2,sub.getObsList().size());
+		Symptom s1=(Symptom) sub.getObsList().get(0);
 		assertEquals(refTime3.getRecord(),s1.getEndTime().getRecord());
-		Symptom s2=(Symptom) sub.getActiveObs().get(0);
+		Symptom s2=(Symptom) sub.getObsList().get(0);
 		assertEquals(refTime3.getRecord(),s2.getEndTime().getRecord());
 	}
 

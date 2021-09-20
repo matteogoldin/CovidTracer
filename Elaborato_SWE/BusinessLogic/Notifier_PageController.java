@@ -24,14 +24,14 @@ public class Notifier_PageController {
 	public void addResult(res r,Subject sub,TimePoint refTime,Evidence ev) {
 		subQ.addSubject(sub);
 		Observation obs=new Result(r,sub,refTime,ev,not);
-		sub.addActiveObs(obs);
+		sub.addObs(obs);
 		hist.add_obs(obs);
 	}
 	
 	public void addContact(Subject secSub,risk rsk,Subject sub,TimePoint refTime,Evidence ev) {
 		subQ.addSubject(sub);
 		Observation obs=new Contact(secSub,rsk,sub,refTime,ev,not);
-		sub.addActiveObs(obs);
+		sub.addObs(obs);
 		hist.add_obs(obs);
 	}
 	
@@ -56,14 +56,14 @@ public class Notifier_PageController {
 			}
 			else{
 				Observation obs=new Symptom(s,sub,refTime,ev,not);
-				sub.addActiveObs(obs);
+				sub.addObs(obs);
 				hist.add_obs(obs);
 			}
 			
 		}
 		else{
 			Observation obs=new Symptom(s,sub,refTime,ev,not);
-			sub.addActiveObs(obs);
+			sub.addObs(obs);
 			hist.add_obs(obs);
 		}
 	}
@@ -71,7 +71,7 @@ public class Notifier_PageController {
 	public void addSymptom(sym s,Subject sub,TimePoint refTime,Evidence ev,TimePoint endTime) {
 		//TO-DO: lanciare eccezzione se s==noSymptom
 		Observation obs=new Symptom(s,sub,refTime,ev,not,endTime);
-		sub.addActiveObs(obs);
+		sub.addObs(obs);
 		hist.add_obs(obs);
 	}
 

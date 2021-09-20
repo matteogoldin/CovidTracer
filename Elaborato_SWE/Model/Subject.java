@@ -13,7 +13,7 @@ public class Subject {
 	private final String cf;
 	private final LocalDate birthDate;
 	private final gender gnd;
-	private ArrayList<Observation> activeObs;
+	private ArrayList<Observation> obsList;
 
 	public Subject(String name, String surname, String cf,LocalDate birthDate,gender gnd) {
 		this.name=name;
@@ -21,20 +21,20 @@ public class Subject {
 		this.cf=cf;
 		this.birthDate=birthDate;
 		this.gnd=gnd;
-		activeObs=new ArrayList<Observation>();
+		obsList=new ArrayList<Observation>();
 	}
 	
-	public void addActiveObs(Observation obs) {
-		activeObs.add(obs);
+	public void addObs(Observation obs) {
+		obsList.add(obs);
 	}
 
-	public ArrayList<Observation> getActiveObs() {
-		return activeObs;
+	public ArrayList<Observation> getObsList() {
+		return obsList;
 	}
 	
 	public ArrayList<Observation> getContacts(){
 		ArrayList<Observation> conts=new ArrayList<Observation>();
-		for(Observation obs:this.activeObs) {
+		for(Observation obs:this.obsList) {
 			if(obs.isContact())
 				conts.add(obs);
 		}
@@ -43,7 +43,7 @@ public class Subject {
 	
 	public ArrayList<Observation> getSymptoms(){
 		ArrayList<Observation> symps=new ArrayList<Observation>();
-		for(Observation obs:this.activeObs) {
+		for(Observation obs:this.obsList) {
 			if(obs.isSymptom())
 				symps.add(obs);
 		}
@@ -52,7 +52,7 @@ public class Subject {
 	
 	public ArrayList<Observation> getResults(){
 		ArrayList<Observation> results=new ArrayList<Observation>();
-		for(Observation obs:this.activeObs) {
+		for(Observation obs:this.obsList) {
 			if(obs.isResult())
 				results.add(obs);
 		}

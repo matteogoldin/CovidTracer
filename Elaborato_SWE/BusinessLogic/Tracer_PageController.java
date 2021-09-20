@@ -21,40 +21,48 @@ public class Tracer_PageController extends Notifier_PageController{
 	@Override
 	public void doLogin() {} //requisiti di accesso più stringenti rispetto a Notifier
 	
-	public Prescription analyzeSub(Subject sub) {
+	public Prescription analyzeSub(Subject sub) {  //data di interesse impostata di default ad oggi
+		TimePoint today=new TimePoint(LocalDate.now());
+		return analyzeSub(sub,today);
+	}
+	
+	public Prescription analyzeSub(Subject sub, TimePoint intrDate) {
 		ArrayList<Observation> tmpObs=new ArrayList<Observation>();
-		boolean reliable=manageObs(sub,tmpObs);
+		boolean reliable=manageObs(sub,tmpObs,intrDate);
 		float covidProb=Evaluator.evaluation(sub,tmpObs);
 		return addPrescription(sub,covidProb,reliable);
 	}
 
-	private boolean manageObs(Subject sub,ArrayList<Observation> tmpObs) {
+	private boolean manageObs(Subject sub,ArrayList<Observation> tmpObs,TimePoint intrDate) {
 		//gestisce le osservazioni attive di un soggetto, eliminando quelle non più rilevanti e creando delle meta-osservazioni sintesi
 		boolean reliable;
-		reliable=deleteNotRel(sub); //Scarto Obs non rilevanti
+		reliable=deleteNotRel(sub,intrDate); //Scarto Obs non rilevanti
 		searchResult(sub,tmpObs); //cerca l'unico eventuale Result rimasto e lo inserisce in tmpObs
 		mergeSymptoms(sub,tmpObs); //crea la meta-osservazione che sintetizza i sintomi
 		mergeContacts(sub,tmpObs); //crea la meta-osservazione che sintetizza i contatti
+		setStatusTrue(); //TO-DO
 		return reliable;
 	}
 
-	public boolean deleteNotRel(Subject sub) {
-		TimePoint today=new TimePoint(LocalDate.now()); 
+
+	public boolean deleteNotRel(Subject sub, TimePoint intrDate) {
 		boolean reliable=true;
+		ArrayList<Observation> obsDeleteList=new ArrayList<Observation>();
 		
-		for(Observation obs : sub.getActiveObs()) {
-			 if(obs.getRefTime().getInterval(today)>28 && obs.isActive()) {
+		for(Observation obs : sub.getObsList()) {
+			 if((obs.getRefTime().getInterval(intrDate)>28 || obs.getRefTime().getInterval(intrDate)<-28) && obs.isActive()) {
 				 obs.setStatus();
 			 }
 		}
 		
 		for(Observation obs : sub.getSymptoms()) {
 			Symptom s=(Symptom) obs;
-			if(s.getEndTime()!=null && s.getRefTime().getInterval(today)>14 && obs.isActive()) {  
-				//se i sintomi si sono manifestati 14 o più giorni prima il soggetto non è più contagioso
+			if(s.getEndTime()!=null && (s.getRefTime().getInterval(intrDate)>14 || s.getRefTime().getInterval(intrDate)<-7) && obs.isActive()) {  
+				//a)se i sintomi si sono manifestati 14 o più giorni prima dell data di interesse il soggetto non è più contagioso
+				//b)se i sintomi si sono manifestati dopo più di 7 giorni dalla data d'interesse non sono rilevanti
 				obs.setStatus();
 			}
-			if(s.getEndTime()==null && obs.isActive() && s.getRefTime().getInterval(today)>14) {
+			if(s.getEndTime()==null && obs.isActive() && s.getRefTime().getInterval(intrDate)>14) {
 				//non sappiamo se i sintomi sono terminati
 				reliable=false;
 			}
@@ -62,7 +70,7 @@ public class Tracer_PageController extends Notifier_PageController{
 
 		for(Observation obs : sub.getResults()) { //gestione Result
 			TimePoint tp=obs.getRefTime();
-			for(Observation src:sub.getActiveObs()) {
+			for(Observation src:sub.getObsList()) {
 				if(obs.isActive()) {
 					if(src.isResult() && tp.getInterval(src.getRefTime())==0 && src.isActive() && obs!=src) {
 						//se abbiamo 2+ risultati tampone in uno stesso giorno dobbiamo gestirli
@@ -76,15 +84,27 @@ public class Tracer_PageController extends Notifier_PageController{
 							//se i risultati sono contrastanti elimino entrambi e dichiaro inaffidabile
 							src.setStatus();
 							obs.setStatus();
+							if(!obsDeleteList.contains(obs))
+								obsDeleteList.add(obs);
+							if(!obsDeleteList.contains(src))
+								obsDeleteList.add(src);
 							reliable=false;
+							
 						}
 					}
-					if(src.isResult() && tp.getInterval(src.getRefTime())>0 && obs.isActive() && src.isActive()) { 
-						//eliminiamo i result meno recenti
+					
+					if(src.isResult() && intrDate.getInterval(src.getRefTime())<0 && intrDate.getInterval(tp)<0 && tp.getInterval(src.getRefTime())>0 && obs.isActive() && src.isActive()) { 
+						//se entrambe i result precedono intrDate "elimino" i meno recenti
 						obs.setStatus();
 					}
-					if(tp.getInterval(src.getRefTime())>0 && obs.isActive() && src.isActive()) { 
-						//elimino Result negativo se ho obs successive != noSymptom
+					
+					if(src.isResult() && intrDate.getInterval(src.getRefTime())>=0 && intrDate.getInterval(tp)>=0 && tp.getInterval(src.getRefTime())<0 && obs.isActive() && src.isActive()) { 
+						//se entrambe i result precedono intrDate elimino i meno recenti
+						obs.setStatus();
+					}
+					
+					if(tp.getInterval(src.getRefTime())>0 && intrDate.getInterval(tp)<0 && obs.isActive() && src.isActive()) { 
+						//elimino Result negativo precedenti alla intrDate se ho obs successive != noSymptom
 						Result r=(Result) obs;
 						if(r.getR()==res.negative) {
 							if(src.isSymptom()) {
@@ -98,8 +118,8 @@ public class Tracer_PageController extends Notifier_PageController{
 							}
 						}
 					}
-					if(src.isContact() && tp.getInterval(src.getRefTime())>=-2 && tp.getInterval(src.getRefTime())<=0 && obs.isActive() && src.isActive()) {
-						//eliminare Result negativo se ho contatto precedente recente (entro due giorni)
+					if(src.isContact() && intrDate.getInterval(tp)<0 && tp.getInterval(src.getRefTime())>=-2 && tp.getInterval(src.getRefTime())<=0 && obs.isActive() && src.isActive()) {
+						//eliminare Result negativo se ho contatto precedente all'intrDate recente (entro due giorni)
 						Result r=(Result) obs;
 						if(r.getR()==res.negative) 
 							obs.setStatus();
@@ -107,12 +127,15 @@ public class Tracer_PageController extends Notifier_PageController{
 				}
 			}
 		}
-		ArrayList<Observation> ActiveObsCopy=new ArrayList<Observation>(sub.getActiveObs());
+		/*ArrayList<Observation> ActiveObsCopy=new ArrayList<Observation>(sub.getObsList());
 		//la copia serve a evitare la ConcurrentModificationException
 		for(Observation obs: ActiveObsCopy) { 
 			if(!obs.isActive())
-				sub.getActiveObs().remove(obs);
-		}	
+				sub.getObsList().remove(obs);
+		}*/
+		for(Observation obs: obsDeleteList) {
+			sub.getObsList().remove(obs);
+		}
 		return reliable;	
 	}
 	
@@ -209,5 +232,11 @@ public class Tracer_PageController extends Notifier_PageController{
 	}
 	
 	private void requestInfo(Subject sub) {} //richiesta di ulteriori info
+	
+	
 
+	private void setStatusTrue() {
+		// TODO Auto-generated method stub
+		
+	}
 }
