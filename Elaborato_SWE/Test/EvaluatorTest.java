@@ -47,7 +47,7 @@ class EvaluatorTest {
 	@Test
 	void FileFoundTest() {
 		TimePoint refTime=new TimePoint(LocalDate.now().minusDays(15));
-		tpc.addResult(res.positive, sub, refTime, evd);
+		tpc.addResult(res.positive, sub, refTime, evd,2);
 		tpc.addSymptom(sym.fever, sub, refTime, evd);
 		tmpObs.add(sub.getObsList().get(0));
 		tmpObs.add(sub.getObsList().get(1));

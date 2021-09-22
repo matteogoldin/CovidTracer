@@ -60,6 +60,7 @@ public class Evaluator {
 		JunctionTreeAlgorithm jTree=new JunctionTreeAlgorithm();
 		jTree.setNet(net);
 		jTree.run();
+		Contact c=null;
 		for(Observation obs:tmpObs) {
 			if(obs.isResult()) {
 				Result r=(Result)obs;
@@ -84,7 +85,7 @@ public class Evaluator {
 				}
 				
 			}else if(obs.isContact()){
-				Contact c=(Contact) obs;
+				c=(Contact) obs;
 				ProbabilisticNode contact =( ProbabilisticNode )net.getNode("Contacts");
 				if(c.getRsk()==risk.low) {
 					contact.addFinding(0);
@@ -102,6 +103,8 @@ public class Evaluator {
 		}
 		
 		float covidProb=((ProbabilisticNode) net.getNode("Covid19")).getMarginalAt(0);
+		if(c!=null)
+			covidProb*=c.getCovProb();
 		return covidProb;
 		/*for(Node node:net.getNodes()) {  //stampa probabilità
 			System.out.println( node.getDescription( ) ) ;

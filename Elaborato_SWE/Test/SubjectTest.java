@@ -98,7 +98,7 @@ public class SubjectTest {
 		TimePoint refTime=new TimePoint(LocalDate.now());
 		Evidence evd=new Evidence(evType.reported);
 		Notifier not=new Notifier("123456","paolorossi68",NotType.citizen);
-		Result r=new Result(res.positive,sub,refTime,evd,not);
+		Result r=new Result(res.positive,sub,refTime,evd,not,2);
 		return r;
 	}
 	

@@ -21,9 +21,9 @@ public class Notifier_PageController {
 	public void doLogin(){}  //verifica requisiti d'accesso
 	
 	
-	public void addResult(res r,Subject sub,TimePoint refTime,Evidence ev) {
+	public void addResult(res r,Subject sub,TimePoint refTime,Evidence ev,int vl) {
 		subQ.addSubject(sub);
-		Observation obs=new Result(r,sub,refTime,ev,not);
+		Observation obs=new Result(r,sub,refTime,ev,not,vl);
 		sub.addObs(obs);
 		hist.add_obs(obs);
 	}
@@ -34,6 +34,15 @@ public class Notifier_PageController {
 		sub.addObs(obs);
 		hist.add_obs(obs);
 	}
+	
+	
+	public void addContact(Subject secSub,risk rsk,Subject sub,TimePoint refTime,Evidence ev,float covProb) {
+		subQ.addSubject(sub);
+		Observation obs=new Contact(secSub,rsk,sub,refTime,ev,not,covProb);
+		sub.addObs(obs);
+		hist.add_obs(obs);
+	}
+	
 	
 	public void addSymptom(sym s,Subject sub,TimePoint refTime,Evidence ev) {
 		subQ.addSubject(sub);

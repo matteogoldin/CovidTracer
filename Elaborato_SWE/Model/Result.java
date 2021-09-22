@@ -5,14 +5,22 @@ public class Result extends Observation{
 		positive,
 		negative
 	}
-	private res r;
 	
-	public Result(res r,Subject sub, TimePoint refTime,Evidence ev,Notifier not){
+	private res r;
+	private int vl; //carica virale
+	
+	public Result(res r,Subject sub, TimePoint refTime,Evidence ev,Notifier not,int vl){
 		super(sub,refTime,ev,not);
 		this.r=r;
+		this.vl=vl;
 	}
 
 	public res getR() {
 		return r;
-	}	
+	}
+
+	public int getVl() {
+		return vl;
+	}
+	
 }

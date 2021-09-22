@@ -37,10 +37,10 @@ public class Tracer_PageController extends Notifier_PageController{
 		//gestisce le osservazioni attive di un soggetto, eliminando quelle non più rilevanti e creando delle meta-osservazioni sintesi
 		boolean reliable;
 		reliable=deleteNotRel(sub,intrDate); //Scarto Obs non rilevanti
-		searchResult(sub,tmpObs); //cerca l'unico eventuale Result rimasto e lo inserisce in tmpObs
-		mergeSymptoms(sub,tmpObs); //crea la meta-osservazione che sintetizza i sintomi
-		mergeContacts(sub,tmpObs); //crea la meta-osservazione che sintetizza i contatti
-		setStatusTrue(); //TO-DO
+		mergeResult(sub,tmpObs,intrDate); //cerca l'unico eventuale Result rimasto e lo inserisce in tmpObs
+		mergeSymptoms(sub,tmpObs,intrDate); //crea la meta-osservazione che sintetizza i sintomi
+		mergeContacts(sub,tmpObs,intrDate); //crea la meta-osservazione che sintetizza i contatti
+		setStatusTrue(sub);
 		return reliable;
 	}
 
@@ -51,7 +51,7 @@ public class Tracer_PageController extends Notifier_PageController{
 		
 		for(Observation obs : sub.getObsList()) {
 			 if((obs.getRefTime().getInterval(intrDate)>28 || obs.getRefTime().getInterval(intrDate)<-28) && obs.isActive()) {
-				 obs.setStatus();
+				 obs.setStatus(false);
 			 }
 		}
 		
@@ -60,7 +60,7 @@ public class Tracer_PageController extends Notifier_PageController{
 			if(s.getEndTime()!=null && (s.getRefTime().getInterval(intrDate)>14 || s.getRefTime().getInterval(intrDate)<-7) && obs.isActive()) {  
 				//a)se i sintomi si sono manifestati 14 o più giorni prima dell data di interesse il soggetto non è più contagioso
 				//b)se i sintomi si sono manifestati dopo più di 7 giorni dalla data d'interesse non sono rilevanti
-				obs.setStatus();
+				obs.setStatus(false);
 			}
 			if(s.getEndTime()==null && obs.isActive() && s.getRefTime().getInterval(intrDate)>14) {
 				//non sappiamo se i sintomi sono terminati
@@ -78,12 +78,12 @@ public class Tracer_PageController extends Notifier_PageController{
 						Result rSrc=(Result) src;
 						if(rObs.getR()==rSrc.getR()) {
 							//se i risultati sono analoghi ne elimino uno
-							src.setStatus();
+							src.setStatus(false);
 						}
 						else {
 							//se i risultati sono contrastanti elimino entrambi e dichiaro inaffidabile
-							src.setStatus();
-							obs.setStatus();
+							src.setStatus(false);
+							obs.setStatus(false);
 							if(!obsDeleteList.contains(obs))
 								obsDeleteList.add(obs);
 							if(!obsDeleteList.contains(src))
@@ -95,12 +95,12 @@ public class Tracer_PageController extends Notifier_PageController{
 					
 					if(src.isResult() && intrDate.getInterval(src.getRefTime())<0 && intrDate.getInterval(tp)<0 && tp.getInterval(src.getRefTime())>0 && obs.isActive() && src.isActive()) { 
 						//se entrambe i result precedono intrDate "elimino" i meno recenti
-						obs.setStatus();
+						obs.setStatus(false);
 					}
 					
 					if(src.isResult() && intrDate.getInterval(src.getRefTime())>=0 && intrDate.getInterval(tp)>=0 && tp.getInterval(src.getRefTime())<0 && obs.isActive() && src.isActive()) { 
 						//se entrambe i result precedono intrDate elimino i meno recenti
-						obs.setStatus();
+						obs.setStatus(false);
 					}
 					
 					if(tp.getInterval(src.getRefTime())>0 && intrDate.getInterval(tp)<0 && obs.isActive() && src.isActive()) { 
@@ -110,11 +110,11 @@ public class Tracer_PageController extends Notifier_PageController{
 							if(src.isSymptom()) {
 								Symptom s=(Symptom) src;
 								if((s.getEx()!=exhibit.none)){
-									obs.setStatus();
+									obs.setStatus(false);
 								}
 							}
 							else {
-								obs.setStatus();
+								obs.setStatus(false);
 							}
 						}
 					}
@@ -122,11 +122,18 @@ public class Tracer_PageController extends Notifier_PageController{
 						//eliminare Result negativo se ho contatto precedente all'intrDate recente (entro due giorni)
 						Result r=(Result) obs;
 						if(r.getR()==res.negative) 
-							obs.setStatus();
+							obs.setStatus(false);
 					}			
 				}
 			}
 		}
+		
+		for(Observation obs: sub.getContacts()) {
+			if(obs.getRefTime().getInterval(intrDate)<0) {
+				obs.setStatus(false);
+			}
+		}
+		
 		/*ArrayList<Observation> ActiveObsCopy=new ArrayList<Observation>(sub.getObsList());
 		//la copia serve a evitare la ConcurrentModificationException
 		for(Observation obs: ActiveObsCopy) { 
@@ -140,14 +147,57 @@ public class Tracer_PageController extends Notifier_PageController{
 	}
 	
 	
-	public void mergeContacts(Subject sub, ArrayList<Observation> tmpObs) {
-		//TO-DO: capire se può essere utile insierire metodo getContacts() e isContact() 
+	public void mergeResult(Subject sub, ArrayList<Observation> tmpObs, TimePoint intrDate) {
+		//la funzione deleteNotRel garantisce che rimangano attive al più due Result (una precedente e una successiva la intrDate)
+		ArrayList<Observation> activeResult = sub.getActiveResults();
+		if(sub.getActiveResults().size()==1) 
+			tmpObs.add(activeResult.get(0));
+		else {
+			Result r1=(Result) activeResult.get(0);
+			Result r2=(Result) activeResult.get(1);
+			if(r1.getRefTime().getInterval(r2.getRefTime())<0) {
+				r1=r2;
+				r2=(Result) activeResult.get(0);
+			}
+			
+			if(r1.getR() == r2.getR()) {
+				tmpObs.add(new Result(r1.getR(),sub,null,null,not,(r1.getVl()+r2.getVl())/2));
+			}
+			else {
+				//abbiamo due tamponi con esiti discordi
+				if(r2.getR() == res.positive && r2.getVl() == 3 && r2.getRefTime().getInterval(intrDate)>-6) {
+					//se il secondo tampone è positivo e a carica alta e tra la intrDate e la data del tampone...
+					//... sono passati meno di 6 giorni il soggetto era già positivo nella intrDate
+					tmpObs.add(new Result(res.positive,sub,null,null,not,sub.calcVl(intrDate)));
+				}
+				else if(r1.getR() == res.positive && r1.getVl() == 3 && r1.getRefTime().getInterval(intrDate)<15){
+					//se entro i 15 giorni precedenti alla intrDate si ha un tampone positivo con carica alta il soggetto è probabilmente ancora positivo
+					tmpObs.add(new Result(res.positive,sub,null,null,not,sub.calcVl(intrDate)));
+				}
+				//si prende il result più recente
+				else if(r1.getRefTime().getInterval(intrDate)<-r2.getRefTime().getInterval(intrDate)) {
+					tmpObs.add(r1);
+				}
+				else if(r1.getRefTime().getInterval(intrDate)>-r2.getRefTime().getInterval(intrDate)) {
+					tmpObs.add(r2);
+				}
+				//se non si rientra in nessuno di questi casi non si considerano entrambi i tamponi
+			}
+		
+		}
+		
+	}
+	
+	
+	public void mergeContacts(Subject sub, ArrayList<Observation> tmpObs, TimePoint intrDate) {
 		Subject secSub=null;
 		risk rsk=null;
-		TimePoint refTime=new TimePoint(LocalDate.now().minusDays(30));
+		TimePoint refTime=new TimePoint(intrDate.getRecord().minusDays(30));
 		Evidence evd=null;
-		for(Observation obs:sub.getContacts()) {
+		float covProb = 0; 
+		for(Observation obs:sub.getActiveContacts()) {
 			Contact c=(Contact) obs;
+			covProb += c.getCovProb();
 			if(c.getRsk()==risk.high) {
 				rsk=risk.high;
 				if(c.getRefTime().getInterval(refTime)<0) {
@@ -174,19 +224,20 @@ public class Tracer_PageController extends Notifier_PageController{
 			}
 		}
 		if(rsk!=null) {
-			Observation metaCont=new Contact(secSub,rsk,sub,refTime,evd,not);
+			if(covProb>1)
+				covProb=1;
+			Observation metaCont=new Contact(secSub,rsk,sub,refTime,evd,not,covProb);
 			tmpObs.add(metaCont);
 		}
 	}
 
-	public void mergeSymptoms(Subject sub, ArrayList<Observation> tmpObs) {
-		//FACOLTATIVO: scalare rischio sulla base dell'evidenza
+	public void mergeSymptoms(Subject sub, ArrayList<Observation> tmpObs, TimePoint intrDate) {
 		exhibit ex=null;
 		Evidence evd=null;
-		TimePoint refTime=new TimePoint(LocalDate.now().minusDays(30));
+		TimePoint refTime=new TimePoint(intrDate.getRecord().minusDays(30));
 		sym smp=null;
 	
-		for(Observation obs:sub.getSymptoms()) {
+		for(Observation obs:sub.getActiveSymptoms()) {
 			Symptom s=(Symptom) obs;
 			if(s.getEx()==exhibit.highRisk) {
 				ex=exhibit.highRisk;
@@ -218,12 +269,6 @@ public class Tracer_PageController extends Notifier_PageController{
 			tmpObs.add(metaSym);
 		}
 	}
-
-	public void searchResult(Subject sub, ArrayList<Observation> tmpObs) {
-		for(Observation obs:sub.getResults()) {
-				tmpObs.add(obs);
-		}
-	}
 	
 
 	private Prescription addPrescription(Subject sub,float covidProb, boolean reliable) {
@@ -235,8 +280,9 @@ public class Tracer_PageController extends Notifier_PageController{
 	
 	
 
-	private void setStatusTrue() {
-		// TODO Auto-generated method stub
+	private void setStatusTrue(Subject sub) {
+		for(Observation obs: sub.getObsList())
+			obs.setStatus(true);
 		
 	}
 }

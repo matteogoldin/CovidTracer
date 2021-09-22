@@ -20,7 +20,6 @@ public abstract class Observation {
 		date=new TimePoint(LocalDate.now());
 	}
 
-
 	public TimePoint getDate() {
 		return date;
 	}
@@ -40,8 +39,8 @@ public abstract class Observation {
 	}
 
 
-	public void setStatus() {
-		this.status.setNotActive();
+	public void setStatus(boolean bool) {
+		this.status.setActive(bool);
 	}
 
 
@@ -79,9 +78,9 @@ public abstract class Observation {
 	}
 
 
-	public void setStatus(Status status) {
+	/*public void setStatus(Status status) {
 		this.status = status;
-	}
+	}*/
 	
 	public boolean isContact() {
 		return (this instanceof Contact); 
