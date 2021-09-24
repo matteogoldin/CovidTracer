@@ -50,7 +50,7 @@ class Ex3 {
 		secSub2=new Subject("Gianna","Giannetti","GNNGNN70T44D612Z",LocalDate.of(1970,12,4),gender.female);
 		
 		tpc.addContact(secSub1, risk.high, sub, new TimePoint(LocalDate.now().minusDays(20)), evd);
-		tpc.addResult(res.negative, sub, new TimePoint(LocalDate.now().minusDays(17)), evd);
+		tpc.addResult(res.negative, sub, new TimePoint(LocalDate.now().minusDays(17)), evd,2);
 		tpc.addContact(secSub2, risk.high, sub, new TimePoint(LocalDate.now().minusDays(10)), evd);
 		tpc.addSymptom(sym.fever, sub, new TimePoint(LocalDate.now().minusDays(8)), evd,new TimePoint(LocalDate.now().minusDays(1)));
 		tpc.addSymptom(sym.hoarseVoice, sub, new TimePoint(LocalDate.now().minusDays(8)), evd,new TimePoint(LocalDate.now().minusDays(1)));

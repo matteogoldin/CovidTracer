@@ -2,7 +2,7 @@ package Model;
 
 import java.time.*;
 
-public class TimePoint implements TimeRecord,Comparable<TimePoint> {
+public class TimePoint{
 	
 	private LocalDate record;
 	
@@ -15,10 +15,6 @@ public class TimePoint implements TimeRecord,Comparable<TimePoint> {
 		 long t2D=t2.getRecord().toEpochDay();
 		 long interval = t2D-t1D;
 		 return interval;
-	}
-	
-	public int compareTo(TimePoint t) { //potrebbe non servire più
-		return this.record.compareTo(t.getRecord());
 	}
 	
 	public LocalDate getRecord() {

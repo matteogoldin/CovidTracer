@@ -55,8 +55,8 @@ class Tracer_PageControllerTest {
 			TimePoint refTime2=new TimePoint(LocalDate.now().minusDays(15));
 			tpc.addSymptom(sym.fever, sub, refTime2, evd);
 			tpc.deleteNotRel(sub,new TimePoint(LocalDate.now()));
-			assertEquals(sub.getObsList().size(),1);
-			assertTrue(sub.getObsList().get(0).isSymptom());
+			assertEquals(1,sub.getActiveObsList().size());
+			assertTrue(sub.getActiveObsList().get(0).isSymptom());
 		}
 		
 		@Test
@@ -68,8 +68,8 @@ class Tracer_PageControllerTest {
 			TimePoint endTime2=new TimePoint(LocalDate.now());
 			tpc.addSymptom(sym.fever, sub, refTime2, evd,endTime2);
 			tpc.deleteNotRel(sub,new TimePoint(LocalDate.now()));
-			assertEquals(1,sub.getObsList().size());
-			assertEquals(sub.getObsList().get(0).getRefTime(),refTime2);
+			assertEquals(1,sub.getActiveObsList().size());
+			assertEquals(sub.getActiveObsList().get(0).getRefTime(),refTime2);
 		}
 		
 		@Test
@@ -84,7 +84,7 @@ class Tracer_PageControllerTest {
 			tpc.addResult(res.positive, sub, refTime, evd,2);
 			reliable=tpc.deleteNotRel(sub,refTime);
 			assertTrue(reliable);
-			assertEquals(1,sub.getObsList().size());
+			assertEquals(1,sub.getActiveObsList().size());
 		}
 		
 		@Test
@@ -94,8 +94,8 @@ class Tracer_PageControllerTest {
 			tpc.addResult(res.positive, sub, refTime1, evd,2);
 			tpc.addResult(res.negative, sub, refTime2, evd,3);
 			tpc.deleteNotRel(sub,new TimePoint(LocalDate.now()));
-			assertEquals(1,sub.getObsList().size());
-			assertEquals(refTime1,sub.getObsList().get(0).getRefTime());
+			assertEquals(1,sub.getActiveObsList().size());
+			assertEquals(refTime1,sub.getActiveObsList().get(0).getRefTime());
 		}
 		
 		@Test
@@ -105,7 +105,7 @@ class Tracer_PageControllerTest {
 			tpc.addResult(res.negative, sub, refTime2, evd,3);
 			tpc.addSymptom(sym.noSymptom, sub, refTime1, evd);
 			tpc.deleteNotRel(sub,new TimePoint(LocalDate.now()));
-			assertEquals(2,sub.getObsList().size());
+			assertEquals(2,sub.getActiveObsList().size());
 		}
 		
 		@Test
@@ -115,8 +115,8 @@ class Tracer_PageControllerTest {
 			tpc.addResult(res.negative, sub, refTime2, evd,3);
 			tpc.addSymptom(sym.abdominalPain, sub, refTime1, evd);
 			tpc.deleteNotRel(sub,new TimePoint(LocalDate.now()));
-			assertEquals(1,sub.getObsList().size());
-			assertTrue(sub.getObsList().get(0).isSymptom());
+			assertEquals(1,sub.getActiveObsList().size());
+			assertTrue(sub.getActiveObsList().get(0).isSymptom());
 		}
 		
 		@Test
@@ -126,8 +126,8 @@ class Tracer_PageControllerTest {
 			tpc.addResult(res.negative, sub, refTime1, evd,3);
 			tpc.addContact(secSub,risk.high,sub,refTime2,evd);
 			tpc.deleteNotRel(sub,new TimePoint(LocalDate.now()));
-			assertEquals(1,sub.getObsList().size());
-			assertTrue(sub.getObsList().get(0).isContact());
+			assertEquals(1,sub.getActiveObsList().size());
+			assertTrue(sub.getActiveObsList().get(0).isContact());
 		}
 		
 		@Test
@@ -137,7 +137,22 @@ class Tracer_PageControllerTest {
 			tpc.addResult(res.negative, sub, refTime1, evd,1);
 			tpc.addContact(secSub,risk.high,sub,refTime2,evd);
 			tpc.deleteNotRel(sub,new TimePoint(LocalDate.now()));
-			assertEquals(2,sub.getObsList().size());
+			assertEquals(2,sub.getActiveObsList().size());
+		}
+		
+		@Test
+		void deleteLessRecentResult() {
+			TimePoint intrDate = new TimePoint(LocalDate.now().minusDays(10));
+			TimePoint t1 = new TimePoint(LocalDate.now().minusDays(8));
+			TimePoint t2 = new TimePoint(LocalDate.now().minusDays(6));
+			TimePoint t3 = new TimePoint(LocalDate.now().minusDays(12));
+			TimePoint t4 = new TimePoint(LocalDate.now().minusDays(14));
+			tpc.addResult(res.positive, sub, t1, evd, 2);
+			tpc.addResult(res.positive, sub, t2, evd, 2);
+			tpc.addResult(res.positive, sub, t3, evd, 2);
+			tpc.addResult(res.positive, sub, t4, evd, 2);
+			tpc.deleteNotRel(sub,intrDate);
+			assertEquals(2,sub.getActiveObsList().size());			
 		}
 		
 	}
@@ -177,6 +192,7 @@ class Tracer_PageControllerTest {
 			tpc.mergeContacts(sub, tmpObs,new TimePoint(LocalDate.now()));
 			assertEquals(0,tmpObs.size());
 		}		
+		
 	}
 	
 	@Nested
@@ -218,7 +234,7 @@ class Tracer_PageControllerTest {
 	}
 	
 	@Nested
-	class searchResultTests{
+	class mergeResultTests{
 		TimePoint refTime1,refTime2,refTime3;
 		ArrayList<Observation> tmpObs;
 		
@@ -229,6 +245,7 @@ class Tracer_PageControllerTest {
 			refTime3=new TimePoint(LocalDate.now().minusDays(8));
 			tmpObs=new ArrayList<Observation>();
 		}
+		
 		@Test
 		void resultFound() {
 			tpc.addResult(res.negative, sub, refTime1, evd,2);
@@ -240,10 +257,17 @@ class Tracer_PageControllerTest {
 			assertTrue(tmpObs.get(0).isResult());
 		}
 		
-		void noResultFound() {	
-			tpc.deleteNotRel(sub,today);
-			tpc.mergeResult(sub, tmpObs,today);
-			assertEquals(0,tmpObs.size());
+		@Test
+		void chooseResult() {
+			TimePoint intrDate = new TimePoint(LocalDate.now().minusDays(10));
+			TimePoint t1 = new TimePoint(LocalDate.now().minusDays(8));
+			TimePoint t2 = new TimePoint(LocalDate.now().minusDays(12));
+			tpc.addResult(res.positive, sub, t1, evd, 2);
+			tpc.addResult(res.positive, sub, t2, evd, 2);
+			tpc.deleteNotRel(sub,intrDate);
+			assertEquals(2,sub.getActiveObsList().size());			
+			tpc.mergeResult(sub, tmpObs, intrDate);
+			assertEquals(1,tmpObs.size());
 		}
 	}
 }

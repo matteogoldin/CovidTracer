@@ -45,7 +45,7 @@ class Ex1 {
 		secSub=new Subject("Matteo","Goldin","GLDMTT99H13B036X",LocalDate.of(1999,6,13),gender.male);
 		tpc.addContact(secSub,risk.high,sub,new TimePoint(LocalDate.now().minusDays(14)), evd);
 		tpc.addSymptom(sym.noSymptom, sub, new TimePoint(LocalDate.now().minusDays(5)), evd);
-		tpc.addResult(res.positive, sub,new TimePoint(LocalDate.now().minusDays(7)),evd);
+		tpc.addResult(res.positive, sub,new TimePoint(LocalDate.now().minusDays(7)),evd,2);
 	}
 
 	@Test

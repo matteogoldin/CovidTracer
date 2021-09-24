@@ -10,6 +10,7 @@ import Model.*;
 import Model.Contact.risk;
 import Model.Result.res;
 import Model.Symptom.exhibit;
+import MedicalDomain.DayThreshold;
 
 public class Tracer_PageController extends Notifier_PageController{
 
@@ -23,14 +24,17 @@ public class Tracer_PageController extends Notifier_PageController{
 	
 	public Prescription analyzeSub(Subject sub) {  //data di interesse impostata di default ad oggi
 		TimePoint today=new TimePoint(LocalDate.now());
-		return analyzeSub(sub,today);
+		ArrayList<Observation> tmpObs=new ArrayList<Observation>();
+		boolean reliable=manageObs(sub,tmpObs,today);
+		float covidProb=Evaluator.evaluation(sub,tmpObs);
+		return addPrescription(sub,covidProb,reliable);
 	}
 	
 	public Prescription analyzeSub(Subject sub, TimePoint intrDate) {
 		ArrayList<Observation> tmpObs=new ArrayList<Observation>();
 		boolean reliable=manageObs(sub,tmpObs,intrDate);
 		float covidProb=Evaluator.evaluation(sub,tmpObs);
-		return addPrescription(sub,covidProb,reliable);
+		return addPrescription(sub,covidProb,reliable,intrDate);
 	}
 
 	private boolean manageObs(Subject sub,ArrayList<Observation> tmpObs,TimePoint intrDate) {
@@ -50,19 +54,19 @@ public class Tracer_PageController extends Notifier_PageController{
 		ArrayList<Observation> obsDeleteList=new ArrayList<Observation>();
 		
 		for(Observation obs : sub.getObsList()) {
-			 if((obs.getRefTime().getInterval(intrDate)>28 || obs.getRefTime().getInterval(intrDate)<-28) && obs.isActive()) {
+			 if((obs.getRefTime().getInterval(intrDate)>DayThreshold.covidCourse || obs.getRefTime().getInterval(intrDate)<-DayThreshold.covidCourse) && obs.isActive()) {
 				 obs.setStatus(false);
 			 }
 		}
 		
 		for(Observation obs : sub.getSymptoms()) {
 			Symptom s=(Symptom) obs;
-			if(s.getEndTime()!=null && (s.getRefTime().getInterval(intrDate)>14 || s.getRefTime().getInterval(intrDate)<-7) && obs.isActive()) {  
+			if(s.getEndTime()!=null && (s.getRefTime().getInterval(intrDate)>DayThreshold.postSymptomCourse || s.getRefTime().getInterval(intrDate)<-DayThreshold.preSymptomCourse) && obs.isActive()) {  
 				//a)se i sintomi si sono manifestati 14 o più giorni prima dell data di interesse il soggetto non è più contagioso
 				//b)se i sintomi si sono manifestati dopo più di 7 giorni dalla data d'interesse non sono rilevanti
 				obs.setStatus(false);
 			}
-			if(s.getEndTime()==null && obs.isActive() && s.getRefTime().getInterval(intrDate)>14) {
+			if(s.getEndTime()==null && obs.isActive() && s.getRefTime().getInterval(intrDate)>DayThreshold.postSymptomCourse) {
 				//non sappiamo se i sintomi sono terminati
 				reliable=false;
 			}
@@ -94,12 +98,12 @@ public class Tracer_PageController extends Notifier_PageController{
 					}
 					
 					if(src.isResult() && intrDate.getInterval(src.getRefTime())<0 && intrDate.getInterval(tp)<0 && tp.getInterval(src.getRefTime())>0 && obs.isActive() && src.isActive()) { 
-						//se entrambe i result precedono intrDate "elimino" i meno recenti
+						//se entrambe i Result precedono intrDate "elimino" i meno recenti
 						obs.setStatus(false);
 					}
 					
 					if(src.isResult() && intrDate.getInterval(src.getRefTime())>=0 && intrDate.getInterval(tp)>=0 && tp.getInterval(src.getRefTime())<0 && obs.isActive() && src.isActive()) { 
-						//se entrambe i result precedono intrDate elimino i meno recenti
+						//se entrambe i Result succedono intrDate elimino i meno recenti
 						obs.setStatus(false);
 					}
 					
@@ -118,7 +122,7 @@ public class Tracer_PageController extends Notifier_PageController{
 							}
 						}
 					}
-					if(src.isContact() && intrDate.getInterval(tp)<0 && tp.getInterval(src.getRefTime())>=-2 && tp.getInterval(src.getRefTime())<=0 && obs.isActive() && src.isActive()) {
+					if(src.isContact() && intrDate.getInterval(tp)<=0 && tp.getInterval(src.getRefTime())>=-DayThreshold.incubationTime && tp.getInterval(src.getRefTime())<=0 && obs.isActive() && src.isActive()) {
 						//eliminare Result negativo se ho contatto precedente all'intrDate recente (entro due giorni)
 						Result r=(Result) obs;
 						if(r.getR()==res.negative) 
@@ -150,6 +154,7 @@ public class Tracer_PageController extends Notifier_PageController{
 	public void mergeResult(Subject sub, ArrayList<Observation> tmpObs, TimePoint intrDate) {
 		//la funzione deleteNotRel garantisce che rimangano attive al più due Result (una precedente e una successiva la intrDate)
 		ArrayList<Observation> activeResult = sub.getActiveResults();
+		if(sub.getActiveResults().size()==0) {return;}
 		if(sub.getActiveResults().size()==1) 
 			tmpObs.add(activeResult.get(0));
 		else {
@@ -165,12 +170,12 @@ public class Tracer_PageController extends Notifier_PageController{
 			}
 			else {
 				//abbiamo due tamponi con esiti discordi
-				if(r2.getR() == res.positive && r2.getVl() == 3 && r2.getRefTime().getInterval(intrDate)>-6) {
+				if(r2.getR() == res.positive && r2.getVl() == 3 && r2.getRefTime().getInterval(intrDate)>-DayThreshold.covidAdvancedState) {
 					//se il secondo tampone è positivo e a carica alta e tra la intrDate e la data del tampone...
 					//... sono passati meno di 6 giorni il soggetto era già positivo nella intrDate
 					tmpObs.add(new Result(res.positive,sub,null,null,not,sub.calcVl(intrDate)));
 				}
-				else if(r1.getR() == res.positive && r1.getVl() == 3 && r1.getRefTime().getInterval(intrDate)<15){
+				else if(r1.getR() == res.positive && r1.getVl() == 3 && r1.getRefTime().getInterval(intrDate)<DayThreshold.covidAdvancedCourse){
 					//se entro i 15 giorni precedenti alla intrDate si ha un tampone positivo con carica alta il soggetto è probabilmente ancora positivo
 					tmpObs.add(new Result(res.positive,sub,null,null,not,sub.calcVl(intrDate)));
 				}
@@ -273,6 +278,11 @@ public class Tracer_PageController extends Notifier_PageController{
 
 	private Prescription addPrescription(Subject sub,float covidProb, boolean reliable) {
 		Prescription presc=new Prescription(sub,(Tracer)not,reliable,covidProb);
+		return presc;
+	}
+	
+	private Prescription addPrescription(Subject sub,float covidProb, boolean reliable,TimePoint intrDate) {
+		Prescription presc=new Prescription(sub,(Tracer)not,reliable,covidProb,intrDate);
 		return presc;
 	}
 	

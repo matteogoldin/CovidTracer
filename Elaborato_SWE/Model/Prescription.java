@@ -1,15 +1,17 @@
 package Model;
 
 import java.time.LocalDate;
+import MedicalDomain.RiskThreshold;
 
 public class Prescription {
-	Subject sub;
-	Tracer trac;
-	TimePoint date;
-	boolean rlb;
-	String diag;
-	String notes;
-	float covidProb;
+	private Subject sub;
+	private Tracer trac;
+	private TimePoint date;
+	private TimePoint intrDate;
+	private boolean rlb;
+	private String diag;
+	private String notes;
+	private float covidProb;
 	
 	public Prescription(Subject sub, Tracer trac, boolean rlb, float covidProb) {
 		this.sub = sub;
@@ -17,6 +19,18 @@ public class Prescription {
 		this.covidProb=covidProb;
 		writeDiag(covidProb);
 		writeNotes(rlb);
+		date=new TimePoint(LocalDate.now());
+		intrDate=date;
+	}
+	
+	public Prescription(Subject sub, Tracer trac, boolean rlb, float covidProb,TimePoint intrDate) {
+		//se si vuole conoscere la probabilità che un soggetto fosse positivo in una data passata possiamo soltanto ritornare tale prob senza prescrivere procedure
+		this.sub = sub;
+		this.trac = trac;
+		this.covidProb=covidProb;
+		this.intrDate=intrDate;
+		diag="Il soggetto nella data d'interesse era positivo con probabilità:"+Float.toString(covidProb);
+		notes="";
 		date=new TimePoint(LocalDate.now());
 	}
 
@@ -31,9 +45,9 @@ public class Prescription {
 	}
 
 	private void writeDiag(float covidProb) {
-		if(covidProb<0.11) {  //TODO parametri nel medical domain
+		if(covidProb<RiskThreshold.lowRisk) {
 			diag="Il Soggetto è considerato non a rischio; non sono previsti ulteriori adempimenti \n";
-		}else if(covidProb<0.19) {
+		}else if(covidProb<RiskThreshold.mediumRisk) {
 			diag="Il Soggetto è considerato potenzialmente a rischio; "
 					+ "il Soggetto deve rispettare l'isolamento domestico fino all'ottenimento di un tampone con esito negativo \n";
 		}else {
