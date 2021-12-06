@@ -1,7 +1,7 @@
 package Model;
 
 import java.time.LocalDate;
-import MedicalDomain.RiskThreshold;
+import MedicalDomain.CovidProbThreshold;
 
 public class Prescription {
 	private Subject sub;
@@ -45,15 +45,15 @@ public class Prescription {
 	}
 
 	private void writeDiag(float covidProb) {
-		if(covidProb<RiskThreshold.lowRisk) {
+		if(covidProb<CovidProbThreshold.lowRisk) {
 			diag="Il Soggetto è considerato non a rischio; non sono previsti ulteriori adempimenti \n";
-		}else if(covidProb<RiskThreshold.mediumRisk) {
+		}else if(covidProb<CovidProbThreshold.mediumRisk) {
 			diag="Il Soggetto è considerato potenzialmente a rischio; "
 					+ "il Soggetto deve rispettare l'isolamento domestico fino all'ottenimento di un tampone con esito negativo \n";
 		}else {
 			diag="Il Soggetto è considerato ad alto rischio;"
 					+ "il Soggetto deve sottoporsi a un tampone e, indipendentemente dall'esito, rispettare l'isolamento domestico "
-					+ "per 15 giorni, al termine dei quali sottoporsi a un nuovo tampone \n";
+					+ "per 7 giorni, al termine dei quali sottoporsi a un nuovo tampone \n";
 		}
 	}
 

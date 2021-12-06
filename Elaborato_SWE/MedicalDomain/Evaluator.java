@@ -14,7 +14,7 @@ import unbbayes.io.*;
 public class Evaluator {
 
 	public static float evaluation(Subject sub,ArrayList<Observation> tmpObs) {
-		//Step 1: sulla base del soggetto delezionare la bn corretta
+		//Step 1: sulla base del soggetto selezionare la bn corretta
 		//Step 2: applicare l'inferenza sulla rete scelta basandosi su tmpObs
 		//Step 3: ritornare la probabilità della v.a. Covid
 		ProbabilisticNetwork net;

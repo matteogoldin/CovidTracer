@@ -11,7 +11,7 @@ public class Notifier {
 		employer,
 		school,
 		lab,
-		another
+		other
 	}
 	
 	public Notifier(String id,String psw,NotType nt) {

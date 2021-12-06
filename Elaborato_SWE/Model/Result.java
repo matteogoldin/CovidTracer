@@ -7,7 +7,7 @@ public class Result extends Observation{
 	}
 	
 	private res r;
-	private int vl; //carica virale
+	private int vl; //carica virale compresa tra 0 e 3
 	
 	public Result(res r,Subject sub, TimePoint refTime,Evidence ev,Notifier not,int vl){
 		super(sub,refTime,ev,not);

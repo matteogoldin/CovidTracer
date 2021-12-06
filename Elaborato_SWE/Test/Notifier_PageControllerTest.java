@@ -10,12 +10,16 @@ import org.junit.jupiter.api.Test;
 import BusinessLogic.Notifier_PageController;
 import MedicalDomain.TypeOfSymptom.sym;
 import Model.*;
+import Model.Contact.risk;
+import Model.Evidence.evType;
 import Model.Notifier.NotType;
+import Model.Result.res;
 import Model.Subject.gender;
 
 class Notifier_PageControllerTest {
 	TimePoint refTime1,refTime2,refTime3;
 	Subject sub;
+	Subject secSub;
 	Notifier not;
 	SubjectQueue sq;
 	History hs;
@@ -29,6 +33,7 @@ class Notifier_PageControllerTest {
 		refTime3=new TimePoint(LocalDate.now().minusDays(5));
 		not=new Notifier("123456","paolorossi68",NotType.citizen);
 		sub=new Subject("Alessandro","Ugolini","GLNLSMN99T16B036G",LocalDate.of(1999,12,16),gender.male);
+		secSub=new Subject("Matteo","Goldin","GLDMTT99H13B036X",LocalDate.of(1999,6,13),gender.male);
 		sq=new SubjectQueue();
 		sq.addSubject(sub);
 		hs=new History();	
@@ -45,6 +50,23 @@ class Notifier_PageControllerTest {
 		assertEquals(refTime3.getRecord(),s1.getEndTime().getRecord());
 		Symptom s2=(Symptom) sub.getObsList().get(0);
 		assertEquals(refTime3.getRecord(),s2.getEndTime().getRecord());
+	}
+	
+	@Test
+	void addContactTest() {
+		npc.addContact(secSub, risk.high, sub, refTime1,new Evidence(evType.ascertained));
+		assertEquals(1,sub.getObsList().size());
+		Contact c=(Contact) sub.getObsList().get(0);
+		assertTrue(c.isContact());
+		
+	}
+	
+	@Test
+	void addResultTest() {
+		npc.addResult(res.positive, sub, refTime1,new Evidence(evType.ascertained), 2);
+		assertEquals(1,sub.getObsList().size());
+		Result r=(Result) sub.getObsList().get(0);
+		assertTrue(r.isResult());
 	}
 
 }

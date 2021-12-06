@@ -39,14 +39,13 @@ public class SubjectTest {
 		assertEquals("Same length",1,symList.size());
 		assertTrue(symList.get(0).isSymptom());
 	}
+	
 	@Test
 	public void getNoSymptoms() {
 		sub.getObsList().remove(1);
 		ArrayList<Observation> symList=sub.getSymptoms();
 		assertEquals("Same length",0,symList.size());
 	}	
-
-	
 	
 	@Test
 	public void getOneResultsTest() {

@@ -252,7 +252,7 @@ class Tracer_PageControllerTest {
 			tpc.addResult(res.positive, sub, refTime2, evd,2);
 			tpc.addResult(res.negative, sub, refTime3, evd,2);
 			tpc.deleteNotRel(sub,today);
-			tpc.mergeResult(sub, tmpObs,today);
+			tpc.mergeResults(sub, tmpObs,today);
 			assertEquals(1,tmpObs.size());
 			assertTrue(tmpObs.get(0).isResult());
 		}
@@ -266,7 +266,7 @@ class Tracer_PageControllerTest {
 			tpc.addResult(res.positive, sub, t2, evd, 2);
 			tpc.deleteNotRel(sub,intrDate);
 			assertEquals(2,sub.getActiveObsList().size());			
-			tpc.mergeResult(sub, tmpObs, intrDate);
+			tpc.mergeResults(sub, tmpObs, intrDate);
 			assertEquals(1,tmpObs.size());
 		}
 	}

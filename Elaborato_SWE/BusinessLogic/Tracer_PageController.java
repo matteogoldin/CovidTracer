@@ -41,7 +41,7 @@ public class Tracer_PageController extends Notifier_PageController{
 		//gestisce le osservazioni attive di un soggetto, eliminando quelle non più rilevanti e creando delle meta-osservazioni sintesi
 		boolean reliable;
 		reliable=deleteNotRel(sub,intrDate); //Scarto Obs non rilevanti
-		mergeResult(sub,tmpObs,intrDate); //cerca l'unico eventuale Result rimasto e lo inserisce in tmpObs
+		mergeResults(sub,tmpObs,intrDate); //cerca l'unico eventuale Result rimasto e lo inserisce in tmpObs
 		mergeSymptoms(sub,tmpObs,intrDate); //crea la meta-osservazione che sintetizza i sintomi
 		mergeContacts(sub,tmpObs,intrDate); //crea la meta-osservazione che sintetizza i contatti
 		setStatusTrue(sub);
@@ -138,12 +138,6 @@ public class Tracer_PageController extends Notifier_PageController{
 			}
 		}
 		
-		/*ArrayList<Observation> ActiveObsCopy=new ArrayList<Observation>(sub.getObsList());
-		//la copia serve a evitare la ConcurrentModificationException
-		for(Observation obs: ActiveObsCopy) { 
-			if(!obs.isActive())
-				sub.getObsList().remove(obs);
-		}*/
 		for(Observation obs: obsDeleteList) {
 			sub.getObsList().remove(obs);
 		}
@@ -151,7 +145,7 @@ public class Tracer_PageController extends Notifier_PageController{
 	}
 	
 	
-	public void mergeResult(Subject sub, ArrayList<Observation> tmpObs, TimePoint intrDate) {
+	public void mergeResults(Subject sub, ArrayList<Observation> tmpObs, TimePoint intrDate) {
 		//la funzione deleteNotRel garantisce che rimangano attive al più due Result (una precedente e una successiva la intrDate)
 		ArrayList<Observation> activeResult = sub.getActiveResults();
 		if(sub.getActiveResults().size()==0) {return;}
